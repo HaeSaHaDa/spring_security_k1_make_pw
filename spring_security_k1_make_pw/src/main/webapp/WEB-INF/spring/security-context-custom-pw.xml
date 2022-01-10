@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:beans="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+    
+    <!-- 검사 URL -->
+    <http auto-config="true" use-expressions="true">
+        <intercept-url pattern="/login/loginForm" access="permitAll" />
+        <intercept-url pattern="/add/**" access="permitAll" />
+        <intercept-url pattern="/" access="permitAll" />
+        <intercept-url pattern="/admin/**" access="hasRole('ADMIN')" />
+        <intercept-url pattern="/**" access="hasAnyRole('USER, ADMIN')" />
+        
+        <form-login login-page="/login/loginForm"
+                    default-target-url="/"
+                    authentication-failure-url="/login/loginForm?error"
+                    username-parameter="username"
+                    password-parameter="pw" />
+        
+         <logout logout-url="/logout"
+                logout-success-url="/" /> 
+                
+        <access-denied-handler error-page="/security/accessDenied" />
+    </http>    
+    <!-- 패스워드 모듈. 이게 있어야 UserService.java의 BCryptPasswordEncoder가 에러가 안 나. 인코딩과 매치함수가 있음-->
+    <beans:bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />
+         
+    <beans:bean id="customNoOpPasswordEncoder" class="edu.kosmo.ex.security.CustomNoOpPasswordEncoder"/> 
+    <beans:bean id="userCustomDetailsService" class="edu.kosmo.ex.security.UserCustomDetailsService"/> 
+    
+    <!-- BLAKE 7698 -->
+    <!--  provider  -->
+      <authentication-manager>
+        <authentication-provider user-service-ref="userCustomDetailsService">
+        <!-- 디코딩 함수-->
+        <password-encoder ref="bcryptPasswordEncoder"/> 
+        </authentication-provider>
+    </authentication-manager> 
+
+</beans:beans>
